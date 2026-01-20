@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy to AWS Elastic Beanstalk
 
 on:
   push:
@@ -6,28 +6,26 @@ on:
       - master
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: "10.0.x"
 
       - name: Restore
         run: dotnet restore
 
-      - name: Publish
+      - name: Publish (to site folder)
         run: dotnet publish -c Release -o site
 
       - name: Zip site
-        run: |
-          cd site
-          zip -r site.zip .
+        run: cd site && zip -r ../site.zip .
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
@@ -37,6 +35,8 @@ jobs:
           application_name: CalculatorApi
           environment_name: CalculatorApi-env
           region: eu-north-1
-          deployment_package: site/site.zip
+          version_label: ${{ github.run_number }}-${{ github.sha }}
+          deployment_package: site.zip
+
 
 
